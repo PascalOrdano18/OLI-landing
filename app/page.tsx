@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ToolGraveyard from "./components/ToolGraveyard";
 import BeforeAfter from "./components/BeforeAfter";
+import FlowPipeline from "./components/FlowPipeline";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
         <Hero />
         <ToolGraveyard />
         <BeforeAfter />
+        <FlowPipeline />
       </main>
     </>
   );
