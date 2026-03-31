@@ -146,13 +146,6 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Hide default cursor on desktop */
-@media (pointer: fine) {
-  *, *::before, *::after {
-    cursor: none !important;
-  }
-}
-
 /* Button breathing idle animation */
 @keyframes btn-breathe {
   0%, 100% { transform: scale(1); }

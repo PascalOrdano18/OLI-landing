@@ -6,13 +6,11 @@ import HorizontalFlow from "./components/HorizontalFlow";
 import OrchestratorShowcase from "./components/OrchestratorShowcase";
 import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
-import CustomCursor from "./components/CustomCursor";
 import ScrollProgress from "./components/ScrollProgress";
 
 export default function Home() {
   return (
     <>
-      <CustomCursor />
       <ScrollProgress />
       <GrainOverlay />
       <Navbar />
