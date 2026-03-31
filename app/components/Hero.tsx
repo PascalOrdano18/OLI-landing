@@ -23,7 +23,10 @@ export default function Hero() {
   useEffect(() => {
     if (!started) return;
     if (charCount >= totalChars) {
-      const t = setTimeout(() => setShowCTA(true), 500);
+      const t = setTimeout(() => {
+        setShowCTA(true);
+        window.dispatchEvent(new CustomEvent("hero-typing-done"));
+      }, 500);
       return () => clearTimeout(t);
     }
     const char = fullText[charCount];

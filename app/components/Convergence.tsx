@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import {
   motion,
   useScroll,
@@ -8,6 +8,7 @@ import {
   useMotionValueEvent,
   MotionValue,
 } from "framer-motion";
+import ParticleRing from "./ParticleRing";
 
 const TARGET = "OLI";
 const POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&";
@@ -95,9 +96,6 @@ function ScrambleItem({
     }
   });
 
-  // --- MOTION: tools physically converge toward center during scramble ---
-
-  // Position: scattered → drift toward center (accelerating)
   const x = useTransform(
     scrollYProgress,
     [0.05, 0.26, 0.40, 0.52],
@@ -109,41 +107,32 @@ function ScrambleItem({
     [tool.y, tool.y, tool.y * 0.25, 0]
   );
 
-  // Scale: normalize all sizes toward 1 as they converge
-  const normalizedScale = 100 / tool.size; // target ~100px
+  const normalizedScale = 100 / tool.size;
   const scale = useTransform(
     scrollYProgress,
     [0.26, 0.44, 0.52],
     [1, 1, normalizedScale]
   );
 
-  // Opacity: fade in → hold → boost during merge → fade at end
   const opacity = useTransform(
     scrollYProgress,
     [0.05, 0.14, 0.44, 0.50, 0.56],
     [0, tool.opacity, Math.min(tool.opacity + 0.3, 1), 0.9, 0]
   );
 
-  // Color: brand → OLI accent purple (NOT white — OLI is vibrant)
   const color = useTransform(
     scrollYProgress,
     [scrambleStart, scrambleEnd],
     [tool.color, "#a78bfa"]
   );
 
-  // Rotation: initial → normalize to 0
   const rotate = useTransform(
     scrollYProgress,
     [0.26, 0.42],
     [tool.rotate, 0]
   );
 
-  // Blur: slight blur as they converge fast
-  const blur = useTransform(
-    scrollYProgress,
-    [0.44, 0.52],
-    [0, 6]
-  );
+  const blur = useTransform(scrollYProgress, [0.44, 0.52], [0, 6]);
   const filter = useTransform(blur, (v) => `blur(${v}px)`);
 
   return (
@@ -171,18 +160,46 @@ function ScrambleItem({
 
 export default function Convergence() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start end", "end start"],
   });
 
-  // OLI emerges as tools converge into it
+  // Particle ring visibility — fades in as OLI emerges
+  const [ringVisibility, setRingVisibility] = useState(0);
+  const [mouse, setMouse] = useState({ x: 0, y: 0, active: false });
+
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    // Ring fades in 0.52→0.60, holds, fades out 0.80→0.88
+    if (v < 0.52) setRingVisibility(0);
+    else if (v < 0.60) setRingVisibility((v - 0.52) / 0.08);
+    else if (v < 0.80) setRingVisibility(1);
+    else if (v < 0.88) setRingVisibility(1 - (v - 0.80) / 0.08);
+    else setRingVisibility(0);
+  });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = stickyRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setMouse({
+      x: e.clientX - rect.left - rect.width / 2,
+      y: e.clientY - rect.top - rect.height / 2,
+      active: true,
+    });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setMouse({ x: 0, y: 0, active: false });
+  }, []);
+
+  // OLI emerges as tools converge
   const oliOpacity = useTransform(scrollYProgress, [0.50, 0.58], [0, 1]);
   const oliScale = useTransform(scrollYProgress, [0.50, 0.66], [0.6, 1]);
   const oliBlur = useTransform(scrollYProgress, [0.50, 0.60], [16, 0]);
   const oliFilter = useTransform(oliBlur, (v) => `blur(${v}px)`);
 
-  // Multiple glow layers — vibrant, not subtle
+  // Glow layers
   const glowOpacity = useTransform(scrollYProgress, [0.48, 0.60], [0, 1]);
   const glowScale = useTransform(scrollYProgress, [0.48, 0.62], [0.3, 1.3]);
 
@@ -195,7 +212,12 @@ export default function Convergence() {
       ref={sectionRef}
       className="relative min-h-[400vh] flex items-start justify-center"
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+      <div
+        ref={stickyRef}
+        className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         {/* Tools that scramble + converge */}
         <div className="absolute inset-0">
           {tools.map((tool) => (
@@ -207,12 +229,19 @@ export default function Convergence() {
           ))}
         </div>
 
-        {/* The massive OLI — vibrant, not washed out */}
+        {/* Particle ring — orbits OLI after merge */}
+        <ParticleRing
+          radius={180}
+          visibility={ringVisibility}
+          mouse={mouse}
+        />
+
+        {/* The massive OLI */}
         <motion.div
           className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none"
           style={{ opacity: oliOpacity }}
         >
-          {/* Purple/indigo glow — intense */}
+          {/* Purple glow */}
           <motion.div
             className="absolute inset-0"
             style={{
@@ -222,7 +251,7 @@ export default function Convergence() {
                 "radial-gradient(ellipse 55% 45% at 50% 50%, rgba(139,92,246,0.35) 0%, rgba(99,102,241,0.12) 35%, transparent 65%)",
             }}
           />
-          {/* Core glow — saturated */}
+          {/* Core glow */}
           <motion.div
             className="absolute inset-0"
             style={{
@@ -232,7 +261,7 @@ export default function Convergence() {
                 "radial-gradient(circle 300px at 50% 50%, rgba(167,139,250,0.5) 0%, rgba(139,92,246,0.2) 30%, transparent 65%)",
             }}
           />
-          {/* Pink accent glow for richness */}
+          {/* Pink accent */}
           <motion.div
             className="absolute inset-0"
             style={{
@@ -243,7 +272,7 @@ export default function Convergence() {
             }}
           />
 
-          {/* OLI text — vibrant gradient, not white */}
+          {/* OLI text */}
           <motion.span
             className="relative z-10 text-[clamp(150px,30vw,400px)] font-bold tracking-[-0.06em] leading-none select-none"
             style={{

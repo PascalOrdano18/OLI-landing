@@ -3,21 +3,37 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const TARGET_TEXT = "Download OLI";
-const SCRAMBLE_CHARS =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*<>";
+const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&";
+const WAVE_COUNT = 5;
 
 export default function DownloadButton({
   className = "",
+  onHoverChange,
 }: {
   className?: string;
+  onHoverChange?: (hovering: boolean) => void;
 }) {
   const [displayText, setDisplayText] = useState(TARGET_TEXT);
   const [isHovering, setIsHovering] = useState(false);
-  const [isNear, setIsNear] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const zoneRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLAnchorElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const currentPos = useRef({ x: 0, y: 0, rotation: 0, scale: 1 });
+  const targetPos = useRef({ x: 0, y: 0, rotation: 0, scale: 1 });
+  const wavesRef = useRef<HTMLDivElement[]>([]);
+
+  // Toggle light theme on hover
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isHovering) {
+      html.setAttribute("data-theme", "light");
+    } else {
+      html.removeAttribute("data-theme");
+    }
+    return () => {
+      html.removeAttribute("data-theme");
+    };
+  }, [isHovering]);
 
   // Text scramble on hover
   useEffect(() => {
@@ -25,7 +41,6 @@ export default function DownloadButton({
       setDisplayText(TARGET_TEXT);
       return;
     }
-
     let iteration = 0;
     const interval = setInterval(() => {
       setDisplayText(
@@ -45,157 +60,128 @@ export default function DownloadButton({
         setDisplayText(TARGET_TEXT);
       }
     }, 30);
-
     return () => clearInterval(interval);
   }, [isHovering]);
 
-  // Mouse position relative to button (for wipe effect)
-  const handleBtnMouseMove = useCallback((e: React.MouseEvent) => {
-    const el = btnRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  // Smooth lerp animation loop
+  useEffect(() => {
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const animate = () => {
+      const c = currentPos.current;
+      const t = targetPos.current;
+      const ease = 0.12;
+      c.x = lerp(c.x, t.x, ease);
+      c.y = lerp(c.y, t.y, ease);
+      c.rotation = lerp(c.rotation, t.rotation, ease);
+      c.scale = lerp(c.scale, t.scale, ease);
+      const el = btnRef.current;
+      if (el) {
+        el.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${c.rotation}deg) scale(${c.scale})`;
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  // Magnetic zone pull
-  const handleZoneMouseMove = useCallback((e: React.MouseEvent) => {
-    const el = wrapperRef.current;
-    const zone = zoneRef.current;
-    if (!el || !zone) return;
-    const elRect = el.getBoundingClientRect();
-    const btnCenterX = elRect.left + elRect.width / 2;
-    const btnCenterY = elRect.top + elRect.height / 2;
-    const dx = e.clientX - btnCenterX;
-    const dy = e.clientY - btnCenterY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const maxDist = zone.getBoundingClientRect().width / 2;
-    const strength = Math.max(0, 1 - dist / maxDist);
-    const pull = strength * 0.45;
-    el.style.transform = `translate(${dx * pull}px, ${dy * pull}px) scale(${1 + strength * 0.04})`;
-  }, []);
+  // Fire shockwaves on hover
+  useEffect(() => {
+    if (!isHovering) return;
+    const waves = wavesRef.current;
+    waves.forEach((el, i) => {
+      if (!el) return;
+      // Reset
+      el.style.transition = "none";
+      el.style.transform = "translate(-50%, -50%) scale(0.5)";
+      el.style.opacity = "1";
+      // Force reflow
+      void el.offsetWidth;
+      // Animate with stagger
+      setTimeout(() => {
+        el.style.transition = `transform 1.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 1.4s cubic-bezier(0.23, 1, 0.32, 1)`;
+        el.style.transform = "translate(-50%, -50%) scale(12)";
+        el.style.opacity = "0";
+      }, i * 100);
+    });
+  }, [isHovering]);
 
-  const handleZoneMouseLeave = useCallback(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    el.style.transform = "translate(0, 0) scale(1)";
+  // Magnetic pull
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const el = btnRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const x = e.clientX - centerX;
+      const y = e.clientY - centerY;
+      const pull = isHovering ? 0.35 : 0.15;
+      targetPos.current = {
+        x: x * pull,
+        y: y * pull,
+        rotation: x * 0.05,
+        scale: isHovering ? 1.08 : 1,
+      };
+    },
+    [isHovering]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    targetPos.current = { x: 0, y: 0, rotation: 0, scale: 1 };
     setIsHovering(false);
-    setIsNear(false);
-  }, []);
+    onHoverChange?.(false);
+  }, [onHoverChange]);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovering(true);
+    onHoverChange?.(true);
+  }, [onHoverChange]);
 
   return (
-    <div
-      ref={zoneRef}
-      className={`relative inline-flex items-center justify-center ${className}`}
-      style={{ padding: "80px 120px", margin: "-80px -120px" }}
-      onMouseMove={handleZoneMouseMove}
-      onMouseLeave={handleZoneMouseLeave}
-      onMouseEnter={() => setIsNear(true)}
-    >
-      <div
-        ref={wrapperRef}
-        className="relative inline-flex items-center justify-center"
+    <div ref={wrapRef} className="relative">
+      {/* Shockwave rings — emanate from button center */}
+      {Array.from({ length: WAVE_COUNT }, (_, i) => (
+        <div
+          key={i}
+          ref={(el) => { if (el) wavesRef.current[i] = el; }}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: 120,
+            height: 120,
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%) scale(0.5)",
+            opacity: 0,
+            border: `${1.5 - i * 0.2}px solid rgba(99, 102, 241, ${0.5 - i * 0.08})`,
+            boxShadow: i === 0
+              ? "0 0 20px rgba(99,102,241,0.15), inset 0 0 20px rgba(99,102,241,0.05)"
+              : "none",
+          }}
+        />
+      ))}
+
+      <a
+        ref={btnRef}
+        href="#download"
+        className={`relative z-10 inline-flex items-center justify-center font-mono text-sm font-medium px-8 py-3.5 rounded-full tracking-wide select-none border will-change-transform ${className}`}
         style={{
-          transition: "transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)",
+          background: isHovering ? "var(--cta-bg)" : "transparent",
+          borderColor: isHovering
+            ? "var(--cta-bg)"
+            : "rgba(255, 255, 255, 0.12)",
+          color: isHovering ? "var(--cta-text)" : "var(--text-secondary)",
+          boxShadow: isHovering
+            ? "0 0 40px rgba(99,102,241,0.25), 0 0 80px rgba(99,102,241,0.1)"
+            : "none",
+          transition:
+            "background 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s cubic-bezier(0.23, 1, 0.32, 1), color 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
         }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onMouseEnter={handleMouseEnter}
       >
-        {/* Rotating gradient border */}
-        <div
-          className="absolute inset-[-3px] rounded-full transition-opacity duration-700"
-          style={{
-            opacity: isHovering ? 1 : isNear ? 0.3 : 0,
-            background:
-              "conic-gradient(from var(--angle, 0deg), #6366f1, #a855f7, #ec4899, #f59e0b, #22d3ee, #6366f1)",
-            filter: isHovering ? "blur(10px)" : "blur(16px)",
-            animation: "rotate-gradient 3s linear infinite",
-          }}
-        />
-
-        {/* Orbiting particles */}
-        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="absolute left-1/2 top-1/2 pointer-events-none"
-            style={{
-              width: 0,
-              height: 0,
-              opacity: isHovering ? 1 : 0,
-              transition: "opacity 0.5s ease",
-              transitionDelay: `${i * 0.05}s`,
-              animation: `spin-slow ${2 + i * 0.5}s linear infinite`,
-              animationDelay: `${-i * 0.5}s`,
-              animationDirection: i % 2 === 0 ? "normal" : "reverse",
-            }}
-          >
-            <div
-              className="absolute rounded-full"
-              style={{
-                width: 2 + (i % 3),
-                height: 2 + (i % 3),
-                top: i % 2 === 0 ? -(32 + i * 4) : 32 + i * 4,
-                left: -1.5,
-                background: [
-                  "#6366f1",
-                  "#a855f7",
-                  "#ec4899",
-                  "#f59e0b",
-                  "#22d3ee",
-                  "#818cf8",
-                  "#c084fc",
-                ][i],
-                boxShadow: `0 0 10px ${["#6366f1", "#a855f7", "#ec4899", "#f59e0b", "#22d3ee", "#818cf8", "#c084fc"][i]}`,
-              }}
-            />
-          </div>
-        ))}
-
-        {/* Button with cursor-position wipe */}
-        <div
-          ref={btnRef}
-          className="relative overflow-hidden rounded-full"
-          onMouseMove={handleBtnMouseMove}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
-        >
-          {/* Default layer: white bg, dark text */}
-          <a
-            href="#download"
-            className="relative z-[1] block font-mono text-base font-semibold px-10 py-4 rounded-full tracking-wide select-none"
-            style={{
-              background: "var(--cta-bg)",
-              color: "var(--cta-text)",
-              animation: isNear ? "none" : "btn-breathe 3s ease-in-out infinite",
-            }}
-          >
-            {displayText}
-          </a>
-
-          {/* Hover wipe layer: accent gradient, white text, expands from cursor */}
-          <div
-            className="absolute inset-0 z-[2] flex items-center justify-center font-mono text-base font-semibold tracking-wide pointer-events-none select-none rounded-full"
-            style={{
-              background:
-                "linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7)",
-              color: "#ffffff",
-              clipPath: `circle(${isHovering ? 300 : 0}px at ${mousePos.x}px ${mousePos.y}px)`,
-              transition:
-                "clip-path 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
-            }}
-          >
-            {displayText}
-          </div>
-        </div>
-
-        {/* Glow beneath button */}
-        <div
-          className="absolute inset-x-[-20px] bottom-[-10px] h-[20px] rounded-full pointer-events-none transition-opacity duration-500"
-          style={{
-            opacity: isHovering ? 0.8 : isNear ? 0.3 : 0,
-            background:
-              "radial-gradient(ellipse, rgba(99,102,241,0.5) 0%, transparent 70%)",
-            filter: "blur(10px)",
-          }}
-        />
-      </div>
+        {displayText}
+      </a>
     </div>
   );
 }
