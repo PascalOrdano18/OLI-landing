@@ -44,44 +44,58 @@ function FeatureCard({
   return (
     <motion.div
       ref={cardRef}
-      className="group relative rounded-2xl border p-1.5 transition-all duration-300"
+      className="group relative rounded-2xl border p-[1px] transition-all duration-500 cursor-default"
       style={{
         borderColor: "var(--border)",
         background: "var(--surface)",
       }}
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.7, ease: "easeOut", delay: index * 0.15 }}
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], delay: index * 0.12 }}
       onMouseMove={handleMouseMove}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.borderColor = "var(--border-glow)";
+        e.currentTarget.style.transform = "translateY(-8px)";
+        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(99,102,241,0.08)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = "var(--border)";
         e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
       }}
     >
       {/* Cursor-following radial glow */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
           background:
-            "radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), rgba(99,102,241,0.08), transparent 60%)",
+            "radial-gradient(500px circle at var(--mouse-x) var(--mouse-y), rgba(99,102,241,0.1), transparent 50%)",
         }}
       />
-      <div className="relative z-10">
+      {/* Border glow overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background:
+            "radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), rgba(99,102,241,0.15), transparent 50%)",
+          mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          maskComposite: "exclude",
+          WebkitMaskComposite: "xor",
+          padding: "1px",
+        }}
+      />
+      <div className="relative z-10 p-1.5">
         <MockupFrame
           label={feature.mockupLabel}
           className="rounded-xl overflow-hidden"
         />
-        <div className="px-4 py-5">
-          <h3 className="text-xl font-semibold tracking-tight">
+        <div className="px-5 py-6">
+          <h3 className="text-xl font-bold tracking-tight">
             {feature.title}
           </h3>
           <p
-            className="mt-1.5 text-[15px]"
+            className="mt-2 text-[15px] leading-relaxed"
             style={{ color: "var(--text-secondary)" }}
           >
             {feature.description}
@@ -94,7 +108,7 @@ function FeatureCard({
 
 export default function Features() {
   return (
-    <section className="py-32 sm:py-40 px-6">
+    <section className="py-40 sm:py-52 px-6" style={{ background: "var(--surface-alt)" }}>
       <div className="max-w-[1200px] mx-auto">
         <motion.span
           className="section-label block text-center"
@@ -107,18 +121,18 @@ export default function Features() {
         </motion.span>
 
         <motion.h2
-          className="mt-4 text-4xl sm:text-5xl md:text-[52px] font-semibold tracking-[-0.03em] leading-[1.1] text-center"
+          className="mt-5 text-[clamp(36px,5vw,56px)] font-bold tracking-[-0.04em] leading-[1] text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
         >
           Everything your team needs.
           <br />
           Nothing it doesn&apos;t.
         </motion.h2>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-5">
           {features.map((feature, i) => (
             <FeatureCard key={feature.title} feature={feature} index={i} />
           ))}

@@ -43,8 +43,9 @@ export default function FlowPipeline() {
 
   return (
     <section
+      id="how-it-works"
       ref={sectionRef}
-      className="relative py-32 sm:py-40 px-6"
+      className="relative py-40 sm:py-52 px-6"
     >
       <div className="max-w-[1200px] mx-auto">
         <motion.span
@@ -58,18 +59,18 @@ export default function FlowPipeline() {
         </motion.span>
 
         <motion.h2
-          className="mt-4 text-4xl sm:text-5xl md:text-[52px] font-semibold tracking-[-0.03em] leading-[1.1] text-center"
+          className="mt-5 text-[clamp(36px,5.5vw,60px)] font-bold tracking-[-0.04em] leading-[0.95] text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
         >
           From conversation to
           <br />
           pull request. Automatically.
         </motion.h2>
 
-        <div className="mt-20 relative">
+        <div className="mt-24 relative">
           {/* Vertical line */}
           <div
             className="absolute left-6 sm:left-8 top-0 bottom-0 w-[1px]"
@@ -83,29 +84,27 @@ export default function FlowPipeline() {
                   "linear-gradient(180deg, var(--accent), var(--accent-glow))",
               }}
             />
-            {/* Traveling dot */}
             <motion.div
               className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full"
               style={{
                 top: dotTop,
                 background: "var(--accent-glow)",
-                boxShadow: "0 0 12px var(--accent-glow)",
+                boxShadow: "0 0 16px var(--accent-glow), 0 0 40px rgba(139,92,246,0.2)",
               }}
             />
           </div>
 
           {/* Steps */}
-          <div className="space-y-20 sm:space-y-28">
+          <div className="space-y-24 sm:space-y-32">
             {steps.map((step) => (
               <motion.div
                 key={step.number}
                 className="relative pl-16 sm:pl-20"
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
               >
-                {/* Step number dot on line */}
                 <div
                   className="absolute left-[18px] sm:left-[26px] top-1 w-4 h-4 rounded-full border-2 z-10"
                   style={{
@@ -120,24 +119,24 @@ export default function FlowPipeline() {
                 >
                   {step.number}
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight mt-1">
+                <h3 className="text-3xl sm:text-4xl font-bold tracking-[-0.03em] mt-1">
                   {step.title}
                 </h3>
                 <p
-                  className="text-base mt-2"
+                  className="text-base mt-3 leading-relaxed"
                   style={{ color: "var(--text-secondary)" }}
                 >
                   {step.description}
                 </p>
                 <motion.div
-                  className="mt-6 max-w-[480px]"
+                  className="mt-8 max-w-[500px]"
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{
-                    duration: 0.6,
-                    ease: "easeOut",
-                    delay: 0.2,
+                    duration: 0.7,
+                    ease: [0.23, 1, 0.32, 1],
+                    delay: 0.15,
                   }}
                 >
                   <MockupFrame label={step.mockupLabel} />

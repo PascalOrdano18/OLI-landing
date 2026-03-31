@@ -9,25 +9,21 @@ const tools = [
   { name: "ClickUp", color: "#7B68EE" },
   { name: "Jira", color: "#0052CC" },
   { name: "Notion", color: "#999999" },
+  { name: "Asana", color: "#F06A6A" },
+  { name: "Monday", color: "#6C6CFF" },
+  { name: "Discord", color: "#5865F2" },
 ];
 
 const positions = [
-  { x: -180, y: -60, rotate: -3 },
-  { x: 160, y: -80, rotate: 2 },
-  { x: -120, y: 70, rotate: -2 },
-  { x: 200, y: 50, rotate: 3 },
-  { x: 0, y: -120, rotate: -1 },
+  { x: -200, y: -70, rotate: -4 },
+  { x: 180, y: -90, rotate: 3 },
+  { x: -140, y: 80, rotate: -2 },
+  { x: 220, y: 60, rotate: 4 },
+  { x: 0, y: -130, rotate: -1 },
+  { x: -60, y: 110, rotate: 2 },
+  { x: 140, y: -30, rotate: -3 },
+  { x: -200, y: -10, rotate: 1 },
 ];
-
-interface ToolItemProps {
-  tool: { name: string; color: string };
-  position: { x: number; y: number; rotate: number };
-  toolOpacity: MotionValue<number>;
-  toolScale: MotionValue<number>;
-  toolBlur: MotionValue<number>;
-  toolGrayscale: MotionValue<number>;
-  convergeProgress: MotionValue<number>;
-}
 
 function ToolItem({
   tool,
@@ -37,37 +33,34 @@ function ToolItem({
   toolBlur,
   toolGrayscale,
   convergeProgress,
-}: ToolItemProps) {
+}: {
+  tool: { name: string; color: string };
+  position: { x: number; y: number; rotate: number };
+  toolOpacity: MotionValue<number>;
+  toolScale: MotionValue<number>;
+  toolBlur: MotionValue<number>;
+  toolGrayscale: MotionValue<number>;
+  convergeProgress: MotionValue<number>;
+}) {
   const filterValue = useTransform(
     [toolBlur, toolGrayscale],
     ([blur, gray]: number[]) => `blur(${blur}px) grayscale(${gray})`
   );
   const x = useTransform(convergeProgress, [0, 1], [position.x, 0]);
   const y = useTransform(convergeProgress, [0, 1], [position.y, 0]);
-  const rotate = useTransform(
-    convergeProgress,
-    [0, 1],
-    [position.rotate, 0]
-  );
+  const rotate = useTransform(convergeProgress, [0, 1], [position.rotate, 0]);
 
   return (
     <motion.div
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-      style={{
-        opacity: toolOpacity,
-        scale: toolScale,
-        filter: filterValue,
-        x,
-        y,
-        rotate,
-      }}
+      style={{ opacity: toolOpacity, scale: toolScale, filter: filterValue, x, y, rotate }}
     >
       <span
-        className="inline-block px-5 py-2.5 rounded-xl text-sm font-semibold border"
+        className="inline-block px-5 py-2.5 rounded-xl text-sm font-semibold border whitespace-nowrap"
         style={{
-          borderColor: `${tool.color}44`,
+          borderColor: `${tool.color}33`,
           color: tool.color,
-          background: `${tool.color}11`,
+          background: `${tool.color}0a`,
         }}
       >
         {tool.name}
@@ -75,6 +68,8 @@ function ToolItem({
     </motion.div>
   );
 }
+
+const marqueeTools = ["Slack", "Linear", "ClickUp", "Jira", "Notion", "Asana", "Monday", "Discord", "Teams", "Trello", "Basecamp", "Figma"];
 
 export default function ToolGraveyard() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -84,19 +79,34 @@ export default function ToolGraveyard() {
   });
 
   const toolOpacity = useTransform(scrollYProgress, [0.1, 0.3], [0, 1]);
-  const toolScale = useTransform(scrollYProgress, [0.3, 0.55], [1, 0.6]);
-  const toolBlur = useTransform(scrollYProgress, [0.3, 0.55], [0, 8]);
+  const toolScale = useTransform(scrollYProgress, [0.3, 0.55], [1, 0.5]);
+  const toolBlur = useTransform(scrollYProgress, [0.3, 0.55], [0, 10]);
   const toolGrayscale = useTransform(scrollYProgress, [0.3, 0.55], [0, 1]);
   const convergeProgress = useTransform(scrollYProgress, [0.3, 0.55], [0, 1]);
   const oliOpacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1]);
-  const oliScale = useTransform(scrollYProgress, [0.5, 0.65], [0.8, 1]);
+  const oliScale = useTransform(scrollYProgress, [0.5, 0.65], [0.7, 1]);
 
   return (
     <section
       ref={sectionRef}
       className="relative min-h-[200vh] flex items-start justify-center"
     >
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center px-6">
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center px-6 w-full overflow-hidden">
+        {/* Marquee ticker */}
+        <div className="absolute top-20 left-0 right-0 overflow-hidden opacity-[0.07]">
+          <div className="marquee-track">
+            {[...marqueeTools, ...marqueeTools].map((t, i) => (
+              <span
+                key={`${t}-${i}`}
+                className="text-[clamp(60px,10vw,120px)] font-bold tracking-[-0.04em] mx-8 whitespace-nowrap"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
         <motion.span
           className="section-label"
           initial={{ opacity: 0 }}
@@ -108,11 +118,11 @@ export default function ToolGraveyard() {
         </motion.span>
 
         <motion.h2
-          className="mt-4 text-4xl sm:text-5xl md:text-[52px] font-semibold tracking-[-0.03em] leading-[1.1] text-center"
+          className="mt-5 text-[clamp(40px,6vw,64px)] font-bold tracking-[-0.04em] leading-[0.95] text-center"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
         >
           Stop juggling.
           <br />
@@ -142,17 +152,17 @@ export default function ToolGraveyard() {
             <div
               className="glow-spot"
               style={{
-                width: "300px",
-                height: "300px",
+                width: "400px",
+                height: "400px",
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
                 background:
-                  "radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)",
+                  "radial-gradient(circle, rgba(139,92,246,0.3) 0%, rgba(99,102,241,0.1) 40%, transparent 70%)",
                 position: "absolute",
               }}
             />
-            <span className="text-4xl font-bold tracking-tight relative z-10">
+            <span className="text-5xl font-bold tracking-[-0.03em] relative z-10">
               OLI
             </span>
           </motion.div>
