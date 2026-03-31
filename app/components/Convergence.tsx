@@ -41,27 +41,20 @@ const rawTools = [
   { name: "GitHub", x: -440, y: 330, size: 125, weight: 700, opacity: 0.55, rotate: -7, color: "#238636" },
 ];
 
-// Compute stagger: tools closer to center scramble first (ripple outward)
 const tools: Tool[] = rawTools.map((t) => {
   const dist = Math.sqrt(t.x * t.x + t.y * t.y);
-  return { ...t, stagger: (dist / 700) * 0.05 };
+  return { ...t, stagger: (dist / 700) * 0.04 };
 });
 
-/** Scroll-driven text scramble: from → random noise → to */
 function scrambleText(from: string, to: string, progress: number): string {
   if (progress <= 0) return from;
   if (progress >= 1) return to;
 
-  // Length shrinks from original to target over first 70% of progress
   const len = Math.round(
     from.length - (from.length - to.length) * Math.min(progress * 1.5, 1)
   );
-
-  // Target chars lock in left-to-right after 35% progress
   const lockRatio = Math.max(0, (progress - 0.35) / 0.65);
   const locked = Math.floor(lockRatio * to.length);
-
-  // Original chars survive if their position hasn't been "eaten" yet
   const eatThreshold = progress * 1.8;
 
   let out = "";
@@ -86,10 +79,9 @@ function ScrambleItem({
 }) {
   const textRef = useRef<HTMLSpanElement>(null);
 
-  const scrambleStart = 0.28 + tool.stagger;
-  const scrambleEnd = 0.44 + tool.stagger;
+  const scrambleStart = 0.26 + tool.stagger;
+  const scrambleEnd = 0.42 + tool.stagger;
 
-  // Direct DOM manipulation for text — no React re-renders during scroll
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const el = textRef.current;
     if (!el) return;
@@ -103,45 +95,70 @@ function ScrambleItem({
     }
   });
 
-  // Opacity: fade in → hold → fade out (cross-fade with big OLI)
-  const opacity = useTransform(
+  // --- MOTION: tools physically converge toward center during scramble ---
+
+  // Position: scattered → drift toward center (accelerating)
+  const x = useTransform(
     scrollYProgress,
-    [0.05, 0.14, 0.50, 0.56],
-    [0, tool.opacity, tool.opacity, 0]
+    [0.05, 0.26, 0.40, 0.52],
+    [tool.x, tool.x, tool.x * 0.25, 0]
+  );
+  const y = useTransform(
+    scrollYProgress,
+    [0.05, 0.26, 0.40, 0.52],
+    [tool.y, tool.y, tool.y * 0.25, 0]
   );
 
-  // Color: brand → white as scramble progresses
+  // Scale: normalize all sizes toward 1 as they converge
+  const normalizedScale = 100 / tool.size; // target ~100px
+  const scale = useTransform(
+    scrollYProgress,
+    [0.26, 0.44, 0.52],
+    [1, 1, normalizedScale]
+  );
+
+  // Opacity: fade in → hold → boost during merge → fade at end
+  const opacity = useTransform(
+    scrollYProgress,
+    [0.05, 0.14, 0.44, 0.50, 0.56],
+    [0, tool.opacity, Math.min(tool.opacity + 0.3, 1), 0.9, 0]
+  );
+
+  // Color: brand → OLI accent purple (NOT white — OLI is vibrant)
   const color = useTransform(
     scrollYProgress,
     [scrambleStart, scrambleEnd],
-    [tool.color, "#ffffff"]
+    [tool.color, "#a78bfa"]
   );
 
-  // Rotation normalizes to 0 during scramble (chaos → order)
+  // Rotation: initial → normalize to 0
   const rotate = useTransform(
     scrollYProgress,
-    [scrambleStart, scrambleEnd],
+    [0.26, 0.42],
     [tool.rotate, 0]
   );
 
-  // Weight increases slightly (solidifying effect)
-  const fontWeight = useTransform(
+  // Blur: slight blur as they converge fast
+  const blur = useTransform(
     scrollYProgress,
-    [scrambleStart, scrambleEnd],
-    [tool.weight, 800]
+    [0.44, 0.52],
+    [0, 6]
   );
+  const filter = useTransform(blur, (v) => `blur(${v}px)`);
 
   return (
     <motion.span
       className="absolute left-1/2 top-1/2 whitespace-nowrap select-none pointer-events-none"
       style={{
-        x: tool.x,
-        y: tool.y,
+        x,
+        y,
         rotate,
+        scale,
         opacity,
         color,
-        fontWeight,
+        filter,
         fontSize: tool.size,
+        fontWeight: tool.weight,
         translateX: "-50%",
         translateY: "-50%",
         lineHeight: 1,
@@ -159,15 +176,15 @@ export default function Convergence() {
     offset: ["start end", "end start"],
   });
 
-  // Big OLI cross-fades in as scattered OLIs fade out
+  // OLI emerges as tools converge into it
   const oliOpacity = useTransform(scrollYProgress, [0.50, 0.58], [0, 1]);
-  const oliScale = useTransform(scrollYProgress, [0.50, 0.66], [0.5, 1]);
-  const oliBlur = useTransform(scrollYProgress, [0.50, 0.60], [20, 0]);
+  const oliScale = useTransform(scrollYProgress, [0.50, 0.66], [0.6, 1]);
+  const oliBlur = useTransform(scrollYProgress, [0.50, 0.60], [16, 0]);
   const oliFilter = useTransform(oliBlur, (v) => `blur(${v}px)`);
 
-  // Glow builds behind OLI
-  const glowOpacity = useTransform(scrollYProgress, [0.50, 0.62], [0, 1]);
-  const glowScale = useTransform(scrollYProgress, [0.50, 0.64], [0.3, 1.2]);
+  // Multiple glow layers — vibrant, not subtle
+  const glowOpacity = useTransform(scrollYProgress, [0.48, 0.60], [0, 1]);
+  const glowScale = useTransform(scrollYProgress, [0.48, 0.62], [0.3, 1.3]);
 
   // Subtitle
   const subtitleOpacity = useTransform(scrollYProgress, [0.64, 0.74], [0, 1]);
@@ -179,7 +196,7 @@ export default function Convergence() {
       className="relative min-h-[400vh] flex items-start justify-center"
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-        {/* Scattered tool names that scramble into OLI */}
+        {/* Tools that scramble + converge */}
         <div className="absolute inset-0">
           {tools.map((tool) => (
             <ScrambleItem
@@ -190,39 +207,50 @@ export default function Convergence() {
           ))}
         </div>
 
-        {/* The final massive OLI — cross-fades in */}
+        {/* The massive OLI — vibrant, not washed out */}
         <motion.div
           className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none"
           style={{ opacity: oliOpacity }}
         >
-          {/* Layered glows */}
+          {/* Purple/indigo glow — intense */}
           <motion.div
             className="absolute inset-0"
             style={{
               opacity: glowOpacity,
               scale: glowScale,
               background:
-                "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139,92,246,0.3) 0%, rgba(99,102,241,0.1) 30%, transparent 60%)",
+                "radial-gradient(ellipse 55% 45% at 50% 50%, rgba(139,92,246,0.35) 0%, rgba(99,102,241,0.12) 35%, transparent 65%)",
             }}
           />
+          {/* Core glow — saturated */}
           <motion.div
             className="absolute inset-0"
             style={{
               opacity: glowOpacity,
               scale: glowScale,
               background:
-                "radial-gradient(circle 250px at 50% 50%, rgba(139,92,246,0.4) 0%, transparent 70%)",
+                "radial-gradient(circle 300px at 50% 50%, rgba(167,139,250,0.5) 0%, rgba(139,92,246,0.2) 30%, transparent 65%)",
+            }}
+          />
+          {/* Pink accent glow for richness */}
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              opacity: glowOpacity,
+              scale: glowScale,
+              background:
+                "radial-gradient(circle 200px at 55% 48%, rgba(236,72,153,0.15) 0%, transparent 60%)",
             }}
           />
 
-          {/* OLI text */}
+          {/* OLI text — vibrant gradient, not white */}
           <motion.span
             className="relative z-10 text-[clamp(150px,30vw,400px)] font-bold tracking-[-0.06em] leading-none select-none"
             style={{
               scale: oliScale,
               filter: oliFilter,
               background:
-                "linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.65) 100%)",
+                "linear-gradient(135deg, #c084fc 0%, #a78bfa 25%, #818cf8 50%, #6366f1 75%, #8b5cf6 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
