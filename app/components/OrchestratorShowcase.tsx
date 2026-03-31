@@ -1,7 +1,47 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+
+function TiltCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg)";
+  }, []);
+
+  return (
+    <div
+      ref={cardRef}
+      className={className}
+      style={{
+        transition: "transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)",
+        transformStyle: "preserve-3d",
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </div>
+  );
+}
 
 const agents = [
   { id: 1, task: "fixing auth-middleware.ts", target: 0.82 },
@@ -181,9 +221,10 @@ export default function OrchestratorShowcase() {
             across your codebase. Simultaneously.
           </motion.p>
 
-          {/* Agent terminal visualization */}
+          {/* Agent terminal visualization — 3D tilt on hover */}
+          <TiltCard className="mt-10 w-full max-w-[550px]">
           <motion.div
-            className="mt-10 w-full max-w-[550px] rounded-xl border p-5 sm:p-6"
+            className="w-full rounded-xl border p-5 sm:p-6"
             style={{
               borderColor: "var(--border)",
               background: "rgba(10, 10, 16, 0.8)",
@@ -211,6 +252,7 @@ export default function OrchestratorShowcase() {
               />
             ))}
           </motion.div>
+          </TiltCard>
         </motion.div>
 
         {/* Phase 3: Closing */}

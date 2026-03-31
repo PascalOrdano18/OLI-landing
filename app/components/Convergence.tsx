@@ -250,7 +250,7 @@ export default function Convergence() {
               scale: oliScale,
               filter: oliFilter,
               background:
-                "linear-gradient(135deg, #c084fc 0%, #a78bfa 25%, #818cf8 50%, #6366f1 75%, #8b5cf6 100%)",
+                "linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
