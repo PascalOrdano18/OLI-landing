@@ -1,5 +1,6 @@
 import GrainOverlay from "./components/GrainOverlay";
 import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
 
 export default function Home() {
   return (
@@ -7,11 +8,7 @@ export default function Home() {
       <GrainOverlay />
       <Navbar />
       <main>
-        <div className="h-screen flex items-center justify-center">
-          <h1 className="text-4xl font-semibold tracking-tight">
-            Your team talks. OLI codes.
-          </h1>
-        </div>
+        <Hero />
       </main>
     </>
   );
