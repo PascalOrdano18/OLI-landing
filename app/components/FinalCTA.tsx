@@ -24,40 +24,58 @@ export default function FinalCTA() {
   return (
     <section
       id="download"
-      className="relative min-h-[90vh] flex flex-col items-center justify-center px-6"
+      className="relative min-h-screen flex flex-col items-center justify-center px-6"
     >
-      {/* Background glow */}
+      {/* Pulsing glow behind OLI */}
       <div
-        className="glow-spot -z-10"
+        className="absolute pointer-events-none"
         style={{
-          width: "900px",
-          height: "600px",
-          top: "15%",
+          width: 600,
+          height: 600,
+          top: "50%",
           left: "50%",
-          transform: "translateX(-50%)",
+          transform: "translate(-50%, -50%)",
           background:
-            "radial-gradient(ellipse, rgba(139,92,246,0.12) 0%, rgba(99,102,241,0.06) 35%, transparent 65%)",
+            "radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.05) 40%, transparent 70%)",
+          animation: "pulse-glow 4s ease-in-out infinite",
+          borderRadius: "50%",
         }}
       />
 
-      <motion.h2
-        className="text-[clamp(44px,7vw,80px)] font-bold tracking-[-0.05em] leading-[0.95] text-center"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
+      {/* OLI returns — callback to convergence */}
+      <motion.span
+        className="text-[clamp(80px,18vw,200px)] font-bold tracking-[-0.06em] leading-none select-none"
+        style={{
+          background:
+            "linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.5) 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 1, ease: [0.23, 1, 0.32, 1] }}
       >
-        Stop switching.
-        <br />
-        Start shipping.
-      </motion.h2>
+        OLI
+      </motion.span>
 
-      <motion.div
-        className="mt-12"
+      <motion.h2
+        className="mt-6 text-[clamp(28px,4vw,48px)] font-bold tracking-[-0.04em] leading-[1] text-center"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: 0.15 }}
+        transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.15 }}
+      >
+        Stop switching. Start shipping.
+      </motion.h2>
+
+      <motion.div
+        className="mt-10"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: 0.3 }}
       >
         <a
           ref={btnRef}
@@ -75,12 +93,12 @@ export default function FinalCTA() {
       </motion.div>
 
       <motion.p
-        className="mt-7 text-sm"
+        className="mt-6 text-sm"
         style={{ color: "var(--text-muted)" }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.45 }}
       >
         Available for macOS, Windows, and Linux
       </motion.p>

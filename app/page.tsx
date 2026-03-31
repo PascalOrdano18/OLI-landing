@@ -1,11 +1,9 @@
 import GrainOverlay from "./components/GrainOverlay";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import ToolGraveyard from "./components/ToolGraveyard";
-import BeforeAfter from "./components/BeforeAfter";
-import FlowPipeline from "./components/FlowPipeline";
-import Features from "./components/Features";
-import Roadmap from "./components/Roadmap";
+import Convergence from "./components/Convergence";
+import HorizontalFlow from "./components/HorizontalFlow";
+import Statements from "./components/Statements";
 import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
 
@@ -16,11 +14,9 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <ToolGraveyard />
-        <BeforeAfter />
-        <FlowPipeline />
-        <Features />
-        <Roadmap />
+        <Convergence />
+        <HorizontalFlow />
+        <Statements />
         <FinalCTA />
       </main>
       <Footer />

@@ -40,7 +40,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Selection */
 ::selection {
   background: rgba(99, 102, 241, 0.3);
   color: #fff;
@@ -75,20 +74,26 @@ body {
   color: var(--accent);
 }
 
-/* Marquee */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+/* Typing cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 30s linear infinite;
+.typing-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--text-primary);
+  margin-left: 4px;
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
 }
 
-.marquee-track:hover {
-  animation-play-state: paused;
+/* Pulse glow for CTA */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.2), 0 0 60px rgba(139, 92, 246, 0.1); }
+  50% { box-shadow: 0 0 50px rgba(99, 102, 241, 0.35), 0 0 100px rgba(139, 92, 246, 0.15); }
 }
 
 /* Magnetic button base */
@@ -114,6 +119,12 @@ body {
 
 .magnetic-btn:hover::after {
   opacity: 1;
+}
+
+/* Shockwave ring */
+@keyframes shockwave-ring {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
 }
 
 /* Scrollbar styling */

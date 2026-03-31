@@ -1,11 +1,38 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import MockupFrame from "./MockupFrame";
+
+const LINE_1 = "Your team talks.";
+const LINE_2 = "OLI codes.";
 
 export default function Hero() {
+  const [charCount, setCharCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const [showCTA, setShowCTA] = useState(false);
   const btnRef = useRef<HTMLAnchorElement>(null);
+
+  const fullText = `${LINE_1}\n${LINE_2}`;
+  const totalChars = fullText.length;
+
+  // Start after mount delay
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Typing effect
+  useEffect(() => {
+    if (!started) return;
+    if (charCount >= totalChars) {
+      const t = setTimeout(() => setShowCTA(true), 800);
+      return () => clearTimeout(t);
+    }
+    const char = fullText[charCount];
+    const delay = char === "\n" ? 600 : char === "." ? 350 : 55 + Math.random() * 35;
+    const t = setTimeout(() => setCharCount((c) => c + 1), delay);
+    return () => clearTimeout(t);
+  }, [started, charCount, fullText, totalChars]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const btn = btnRef.current;
@@ -22,68 +49,69 @@ export default function Hero() {
     btn.style.transform = "translate(0, 0) scale(1)";
   }, []);
 
+  const displayed = fullText.slice(0, charCount);
+  const lines = displayed.split("\n");
+  const typing = charCount < totalChars && started;
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-24 overflow-hidden">
-      {/* Background glow — larger, more dramatic */}
-      <div
-        className="glow-spot -z-10"
+    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Ambient glow — builds as text appears */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        animate={{ opacity: charCount > LINE_1.length ? 0.6 : 0 }}
+        transition={{ duration: 2, ease: "easeOut" }}
         style={{
-          width: "1000px",
-          height: "800px",
-          top: "5%",
-          left: "50%",
-          transform: "translateX(-50%)",
           background:
-            "radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, rgba(99,102,241,0.07) 35%, transparent 65%)",
-        }}
-      />
-      {/* Second subtle glow for depth */}
-      <div
-        className="glow-spot -z-10"
-        style={{
-          width: "600px",
-          height: "400px",
-          bottom: "10%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          background:
-            "radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)",
+            "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(99,102,241,0.08) 0%, transparent 70%)",
         }}
       />
 
-      <div className="max-w-[1200px] w-full flex flex-col items-center text-center">
-        <motion.h1
-          className="text-[clamp(48px,8vw,96px)] font-bold leading-[0.95] tracking-[-0.05em]"
-          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-        >
-          Your team talks.
-          <br />
-          <span style={{ color: "var(--accent)" }}>OLI</span> codes.
-        </motion.h1>
+      <div className="relative z-10 flex flex-col items-center text-center px-6">
+        {/* Typed text */}
+        <div className="min-h-[200px] sm:min-h-[260px] flex flex-col items-center justify-center">
+          {lines.map((line, i) => (
+            <div
+              key={i}
+              className="text-[clamp(48px,9vw,110px)] font-bold leading-[1] tracking-[-0.05em]"
+            >
+              {i === 1 ? (
+                <>
+                  <span style={{ color: "var(--accent)" }}>
+                    {line.slice(0, 3)}
+                  </span>
+                  <span>{line.slice(3)}</span>
+                </>
+              ) : (
+                <span>{line}</span>
+              )}
+              {/* Cursor on the active line */}
+              {typing && i === lines.length - 1 && (
+                <span className="typing-cursor" />
+              )}
+            </div>
+          ))}
+          {/* Cursor before typing starts */}
+          {!started && <span className="typing-cursor text-[clamp(48px,9vw,110px)]" />}
+          {/* Cursor after all done */}
+          {charCount >= totalChars && !showCTA && (
+            <div className="text-[clamp(48px,9vw,110px)]">
+              <span className="typing-cursor" />
+            </div>
+          )}
+        </div>
 
-        <motion.p
-          className="mt-7 text-lg sm:text-xl max-w-[540px] leading-relaxed"
-          style={{ color: "var(--text-secondary)" }}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.15 }}
-        >
-          One app that replaces your chat, your tracker, and your backlog
-          &mdash; then writes the code.
-        </motion.p>
-
+        {/* CTA — fades in after typing */}
         <motion.div
-          className="mt-10 flex flex-col sm:flex-row items-center gap-5"
+          className="mt-12 flex flex-col items-center gap-5"
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: 0.3 }}
+          animate={showCTA ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+          style={{ opacity: 0 }}
         >
           <a
             ref={btnRef}
             href="#download"
-            className="magnetic-btn text-base font-medium px-9 py-4 rounded-full"
+            className="magnetic-btn text-base font-medium px-10 py-4 rounded-full"
             style={{
               background: "var(--cta-bg)",
               color: "var(--cta-text)",
@@ -93,41 +121,9 @@ export default function Hero() {
           >
             Download OLI
           </a>
-          <a
-            href="#how-it-works"
-            className="group inline-flex items-center gap-1.5 text-sm font-medium transition-colors duration-200"
-            style={{ color: "var(--text-secondary)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--text-primary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-secondary)";
-            }}
-          >
-            See how it works
-            <svg
-              className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </a>
-        </motion.div>
-
-        <motion.div
-          className="mt-20 w-full max-w-[1060px]"
-          initial={{ opacity: 0, y: 80, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{
-            duration: 1,
-            ease: [0.23, 1, 0.32, 1],
-            delay: 0.5,
-          }}
-        >
-          <MockupFrame label="Product Screenshot — Agent Terminal View" />
+          <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Scroll to see what it replaces
+          </span>
         </motion.div>
       </div>
     </section>
