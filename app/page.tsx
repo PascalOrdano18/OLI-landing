@@ -5,6 +5,9 @@ import ToolGraveyard from "./components/ToolGraveyard";
 import BeforeAfter from "./components/BeforeAfter";
 import FlowPipeline from "./components/FlowPipeline";
 import Features from "./components/Features";
+import Roadmap from "./components/Roadmap";
+import FinalCTA from "./components/FinalCTA";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -17,7 +20,10 @@ export default function Home() {
         <BeforeAfter />
         <FlowPipeline />
         <Features />
+        <Roadmap />
+        <FinalCTA />
       </main>
+      <Footer />
     </>
   );
 }
