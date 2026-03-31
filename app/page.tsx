@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Convergence from "./components/Convergence";
 import HorizontalFlow from "./components/HorizontalFlow";
-import Statements from "./components/Statements";
+import OrchestratorShowcase from "./components/OrchestratorShowcase";
 import FinalCTA from "./components/FinalCTA";
 import Footer from "./components/Footer";
 
@@ -16,7 +16,7 @@ export default function Home() {
         <Hero />
         <Convergence />
         <HorizontalFlow />
-        <Statements />
+        <OrchestratorShowcase />
         <FinalCTA />
       </main>
       <Footer />

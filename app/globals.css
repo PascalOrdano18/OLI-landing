@@ -127,6 +127,25 @@ body {
   100% { transform: scale(4); opacity: 0; }
 }
 
+/* Rotating gradient for download button */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-gradient {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* Slow spin for orbiting particles */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
