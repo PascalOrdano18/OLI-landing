@@ -16,19 +16,19 @@ export default function Hero() {
   const totalChars = fullText.length;
 
   useEffect(() => {
-    const t = setTimeout(() => setStarted(true), 1200);
+    const t = setTimeout(() => setStarted(true), 400);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     if (!started) return;
     if (charCount >= totalChars) {
-      const t = setTimeout(() => setShowCTA(true), 800);
+      const t = setTimeout(() => setShowCTA(true), 400);
       return () => clearTimeout(t);
     }
     const char = fullText[charCount];
     const delay =
-      char === "\n" ? 600 : char === "." ? 350 : 55 + Math.random() * 35;
+      char === "\n" ? 250 : char === "." ? 120 : 28 + Math.random() * 18;
     const t = setTimeout(() => setCharCount((c) => c + 1), delay);
     return () => clearTimeout(t);
   }, [started, charCount, fullText, totalChars]);
